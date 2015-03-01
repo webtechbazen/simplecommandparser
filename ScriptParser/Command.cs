@@ -67,101 +67,51 @@ namespace ScriptParser
             var state = ParseState.Default;
             foreach (char ch in command)
             {
-                switch (ch)
+                switch (state)
                 {
-                    case ' ':
-                        switch (state)
+                    case ParseState.Default:
+                        switch (ch)
                         {
-                            case ParseState.Default:
+                            case ' ':
                                 if (_tokens.Count == 0 && _data.Length > 0)
                                     dataFinish();
                                 break;
-                            case ParseState.Escaped:
-                                dataAppend(ch);
-                                state = ParseState.Default;
-                                break;
-                            case ParseState.Text:
-                                dataAppend(ch);
-                                break;
-                            case ParseState.TextEscaped:
-                                dataAppend(ch);
-                                state = ParseState.Text;
-                                break;
-                        }
-                        break;
-
-                    case ',':
-                        switch (state)
-                        {
-                            case ParseState.Default:
+                            case ',':
                                 dataFinish();
                                 break;
-                            case ParseState.Escaped:
-                                dataAppend(ch);
-                                state = ParseState.Default;
-                                break;
-                            case ParseState.Text:
-                                dataAppend(ch);
-                                break;
-                            case ParseState.TextEscaped:
-                                dataAppend(ch);
-                                state = ParseState.Text;
-                                break;
-                        }
-                        break;
-
-                    case '\\':
-                        switch (state)
-                        {
-                            case ParseState.Default:
+                            case '\\':
                                 state = ParseState.Escaped;
                                 break;
-                            case ParseState.Escaped:
-                                dataAppend(ch);
-                                state = ParseState.Default;
-                                break;
-                            case ParseState.Text:
-                                state = ParseState.TextEscaped;
-                                break;
-                            case ParseState.TextEscaped:
-                                dataAppend(ch);
+                            case '\"':
                                 state = ParseState.Text;
                                 break;
-                        }
-                        break;
-
-                    case '\"':
-                        switch (state)
-                        {
-                            case ParseState.Default:
-                                state = ParseState.Text;
-                                break;
-                            case ParseState.Escaped:
-                                dataAppend(ch);
-                                state = ParseState.Default;
-                                break;
-                            case ParseState.Text:
-                                state = ParseState.Default;
-                                break;
-                            case ParseState.TextEscaped:
-                                dataAppend(ch);
-                                state = ParseState.Text;
-                                break;
-                        }
-                        break;
-
-                    default:
-                        switch (state)
-                        {
-                            case ParseState.Escaped:
-                                dataAppend(ch);
-                                state = ParseState.Default;
-                                break;
-
                             default:
                                 dataAppend(ch);
                                 break;
                         }
+                        break;
+                    case ParseState.Escaped:
+                        dataAppend(ch);
+                        state = ParseState.Default;
+                        break;
+                    case ParseState.Text:
+                        switch (ch)
+                        {
+                            case '\\':
+                                state = ParseState.TextEscaped;
+                                break;
+                            case '\"':
+                                dataFinish();
+                                state = ParseState.Default;
+                                break;
+                            default:
+                                dataAppend(ch);
+                                break;
+                        }
+                        break;
+                    case ParseState.TextEscaped:
+                        dataAppend(ch);
+                        state = ParseState.Text;
                         break;
                 }
             }
