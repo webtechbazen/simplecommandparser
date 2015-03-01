@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace ScriptParser
 {
-    public class CommandParser
+    /// <summary>
+    /// Command parser.
+    /// </summary>
+    public class Command
     {
-        readonly string _input;
-        List<string> _tokens;
         string _data;
-        bool _previousWasData;
-        bool _hadCommand;
+        readonly List<String> _tokens = new List<string>();
 
         enum ParseState
         {
@@ -19,59 +19,72 @@ namespace ScriptParser
             TextEscaped
         }
 
-        void finishData()
+        void dataFinish()
         {
-            if (_previousWasData)
+            if (_data.Length > 0)
             {
-                if (_data.Length > 0)
-                    _tokens.Add(_data);
-                _previousWasData = false;
+                _tokens.Add(_data);
                 _data = "";
             }
         }
 
-        void appendData(char ch)
+        void dataAppend(char ch)
         {
             _data += ch;
-            _previousWasData = true;
         }
 
-        public CommandParser(string input)
+        /// <summary>
+        /// Get the command text.
+        /// </summary>
+        public string Text
         {
-            _input = input;
-        }
-
-        public List<string> Parse()
-        {
-            _tokens = new List<string>();
-            var state = ParseState.Default;
-            _data = "";
-            _previousWasData = false;
-            _hadCommand = false;
-            for (int i = 0; i < _input.Length; i++)
+            get
             {
-                char ch = _input[i];
+                return _tokens.Count > 0 ? _tokens[0] : "";
+            }
+        }
+
+        /// <summary>
+        /// Gets the command arguments.
+        /// </summary>
+        public string[] Arguments
+        {
+            get
+            {
+                var arguments = new string[_tokens.Count - 1];
+                if (_tokens.Count > 1)
+                    _tokens.CopyTo(1, arguments, 0, arguments.Length);
+                return arguments;
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ScriptParser.Command"/> class and parses the command.
+        /// </summary>
+        /// <param name="command">The command to parse.</param>
+        public Command(string command)
+        {
+            var state = ParseState.Default;
+            foreach (char ch in command)
+            {
                 switch (ch)
                 {
                     case ' ':
                         switch (state)
                         {
                             case ParseState.Default:
-                                if (!_hadCommand && _data.Length > 0)
-                                {
-                                    _hadCommand = true;
-                                    finishData();
-                                }
+                                if (_tokens.Count == 0 && _data.Length > 0)
+                                    dataFinish();
                                 break;
                             case ParseState.Escaped:
-                                appendData(ch);
+                                dataAppend(ch);
                                 state = ParseState.Default;
                                 break;
                             case ParseState.Text:
-                                appendData(ch);
+                                dataAppend(ch);
                                 break;
                             case ParseState.TextEscaped:
-                                appendData(ch);
+                                dataAppend(ch);
                                 state = ParseState.Text;
                                 break;
                         }
@@ -81,17 +94,17 @@ namespace ScriptParser
                         switch (state)
                         {
                             case ParseState.Default:
-                                finishData();
+                                dataFinish();
                                 break;
                             case ParseState.Escaped:
-                                appendData(ch);
+                                dataAppend(ch);
                                 state = ParseState.Default;
                                 break;
                             case ParseState.Text:
-                                appendData(ch);
+                                dataAppend(ch);
                                 break;
                             case ParseState.TextEscaped:
-                                appendData(ch);
+                                dataAppend(ch);
                                 state = ParseState.Text;
                                 break;
                         }
@@ -104,14 +117,14 @@ namespace ScriptParser
                                 state = ParseState.Escaped;
                                 break;
                             case ParseState.Escaped:
-                                appendData(ch);
+                                dataAppend(ch);
                                 state = ParseState.Default;
                                 break;
                             case ParseState.Text:
                                 state = ParseState.TextEscaped;
                                 break;
                             case ParseState.TextEscaped:
-                                appendData(ch);
+                                dataAppend(ch);
                                 state = ParseState.Text;
                                 break;
                         }
@@ -124,28 +137,35 @@ namespace ScriptParser
                                 state = ParseState.Text;
                                 break;
                             case ParseState.Escaped:
-                                appendData(ch);
+                                dataAppend(ch);
                                 state = ParseState.Default;
                                 break;
                             case ParseState.Text:
                                 state = ParseState.Default;
                                 break;
                             case ParseState.TextEscaped:
-                                appendData(ch);
+                                dataAppend(ch);
                                 state = ParseState.Text;
                                 break;
                         }
                         break;
 
                     default:
-                        if (state == ParseState.Escaped)
-                            state = ParseState.Default;
-                        appendData(ch);
+                        switch (state)
+                        {
+                            case ParseState.Escaped:
+                                dataAppend(ch);
+                                state = ParseState.Default;
+                                break;
+
+                            default:
+                                dataAppend(ch);
+                                break;
+                        }
                         break;
                 }
             }
-            finishData();
-            return _tokens;
+            dataFinish();
         }
     }
 }

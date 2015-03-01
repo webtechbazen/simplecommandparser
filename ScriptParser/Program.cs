@@ -9,10 +9,11 @@ namespace ScriptParser
             while (true)
             {
                 Console.Write(">");
-                var parser = new CommandParser(Console.ReadLine());
-                var tokens = parser.Parse();
-                foreach (var token in tokens)
-                    Console.WriteLine(token.ToString());
+                var command = new Command(Console.ReadLine());
+                Console.WriteLine(String.Format("Text: \"{0}\"", command.Text));
+                int argnum = 0;
+                foreach (var argument in command.Arguments)
+                    Console.WriteLine(String.Format("Arg{0}: \"{1}\"", argnum++, argument));
             }
         }
     }
