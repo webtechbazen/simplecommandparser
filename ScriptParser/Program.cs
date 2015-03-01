@@ -6,10 +6,14 @@ namespace ScriptParser
     {
         public static void Main(string[] args)
         {
-            var tokenizer = new Tokenizer(Console.ReadLine());
-            var tokens = tokenizer.Tokenize();
-            foreach (var token in tokens)
-                Console.WriteLine(token.ToString());
+            while (true)
+            {
+                Console.Write(">");
+                var parser = new CommandParser(Console.ReadLine());
+                var tokens = parser.Parse();
+                foreach (var token in tokens)
+                    Console.WriteLine(token.ToString());
+            }
         }
     }
 }
