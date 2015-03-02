@@ -73,7 +73,7 @@ namespace ScriptParser
                         switch (ch)
                         {
                             case ' ':
-                                if (_tokens.Count == 0 && _data.Length > 0)
+                                if (_tokens.Count == 0)
                                     dataFinish();
                                 break;
                             case ',':
